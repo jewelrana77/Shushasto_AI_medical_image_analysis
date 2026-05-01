@@ -7,13 +7,18 @@ from gtts import gTTS
 import base64
 
 # ══════════════════════════════════════════════════════════════
-#  CONFIGURATION
+#  CONFIGURATION & API SETUP
 # ══════════════════════════════════════════════════════════════
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAXuZY4qrc0E0nFLaPVGdpy1es5cMdpaEU")
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+# Streamlit secrets থেকে API Key নেওয়া হচ্ছে (GitHub-এ কোড হোস্ট করার জন্য সবচেয়ে নিরাপদ উপায়)
+try:
+    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+except Exception:
+    # যদি Streamlit secrets না থাকে, তবে এনভায়রনমেন্ট ভেরিয়েবল চেক করবে
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
-# ✅ Configure Google Gemini API officially
-genai.configure(api_key=GOOGLE_API_KEY)
+# Configure Google Gemini API officially
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
 
 # ══════════════════════════════════════════════════════════════
 #  ANALYSIS PROMPT
@@ -131,7 +136,6 @@ def clean_text_for_speech(text: str) -> str:
     text = re.sub(r'\n\s*\n', '\n\n', text)
     return text.strip()
 
-
 def text_to_speech(text: str, lang: str = 'en', slow: bool = False):
     """Generate MP3 audio from text using gTTS. Returns file path or None."""
     try:
@@ -146,7 +150,6 @@ def text_to_speech(text: str, lang: str = 'en', slow: bool = False):
         st.error(f"Audio generation failed: {e}")
         return None
 
-
 def autoplay_audio(file_path: str):
     """Inject an auto-playing HTML audio element."""
     try:
@@ -160,9 +163,11 @@ def autoplay_audio(file_path: str):
     except Exception:
         pass
 
-
 def analyze_medical_image(image_path: str) -> str:
     """Send Image to Official Gemini API and return the diagnostic report string."""
+    if not GOOGLE_API_KEY:
+        return "⚠️ API Key is missing! Please configure GOOGLE_API_KEY in Streamlit Secrets."
+        
     try:
         # Load and compress image slightly for faster processing
         img = PILImage.open(image_path)
@@ -616,11 +621,10 @@ col_left, col_right = st.columns([1, 1], gap="large")
 
 # ── LEFT PANEL ──────────────────────────────────────────────
 with col_left:
-
     st.markdown('<div class="panel"><div class="panel-label">Upload Image</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "Drop your medical image here",
-        type=["jpg", "jpeg", "png", "bmp", "gif"],
+        type=["jpg", "jpeg", "png", "bmp", "gif", "webp"],
         help="Supports X-ray, MRI, CT Scan, Ultrasound, and PET images",
         label_visibility="collapsed",
     )
@@ -651,9 +655,7 @@ with col_left:
 
 # ── RIGHT PANEL ─────────────────────────────────────────────
 with col_right:
-
     if uploaded_file and analyze_button:
-
         with st.spinner("Analyzing with Gemini AI — this takes about 20–30 seconds…"):
             ext = uploaded_file.type.split("/")[-1]
             tmp_img = f"upload_temp.{ext}"
@@ -668,7 +670,7 @@ with col_right:
             except Exception:
                 pass
 
-        if report and "Analysis error" not in report:
+        if report and "Analysis error" not in report and "API Key is missing" not in report:
             st.markdown("""
             <div class="report-outer">
                 <div class="report-top">
@@ -750,7 +752,7 @@ with col_right:
 # ══════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="footer">
-    <strong>MediScan AI</strong> &nbsp;·&nbsp; Advanced Medical Imaging Analysis Platform &nbsp;·&nbsp; © 2025<br>
+    <strong>MediScan AI</strong> &nbsp;·&nbsp; Advanced Medical Imaging Analysis Platform &nbsp;·&nbsp; © 2026<br>
     <span style="display:block;margin-top:0.3rem;">
         Powered by Google Gemini &nbsp;·&nbsp; Built for Healthcare Professionals
     </span>

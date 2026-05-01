@@ -1,9 +1,7 @@
 import os
 import re
 from PIL import Image as PILImage
-from agno.agent import Agent
-from agno.models.google import Gemini
-from agno.media import Image as AgnoImage
+import google.generativeai as genai
 import streamlit as st
 from gtts import gTTS
 import base64
@@ -11,27 +9,11 @@ import base64
 # ══════════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ══════════════════════════════════════════════════════════════
-# ⚠️ WARNING: Never hardcode your API key in production code!
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyDqRwrNm-D79rpNQBBl3j17MnHJEXhSuHI")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAXuZY4qrc0E0nFLaPVGdpy1es5cMdpaEU")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
-
-# ══════════════════════════════════════════════════════════════
-#  SAFE TOOL IMPORT
-#  DuckDuckGo's endpoint changes frequently and returns 404.
-#  We disable it gracefully so the agent always runs.
-# ══════════════════════════════════════════════════════════════
-_tools = []   # Web search disabled — avoids DuckDuckGo 404 errors
-
-# ══════════════════════════════════════════════════════════════
-#  MEDICAL AGENT
-# ══════════════════════════════════════════════════════════════
-medical_agent = Agent(
-    # ✅ FIX: Changed to 1.5-flash which is FREE without adding a card
-    model=Gemini(id="gemini-1.5-flash"), 
-    tools=_tools,
-    markdown=True,
-)
+# ✅ Configure Google Gemini API officially
+genai.configure(api_key=GOOGLE_API_KEY)
 
 # ══════════════════════════════════════════════════════════════
 #  ANALYSIS PROMPT
@@ -160,8 +142,8 @@ def text_to_speech(text: str, lang: str = 'en', slow: bool = False):
         path = "output_audio.mp3"
         tts.save(path)
         return path if os.path.exists(path) and os.path.getsize(path) > 0 else None
-    except Exception:
-        st.error("Audio generation failed. Please try again.")
+    except Exception as e:
+        st.error(f"Audio generation failed: {e}")
         return None
 
 
@@ -180,37 +162,25 @@ def autoplay_audio(file_path: str):
 
 
 def analyze_medical_image(image_path: str) -> str:
-    """Resize, send to Gemini, and return the diagnostic report string."""
-    img = PILImage.open(image_path)
-    w, h = img.size
-    new_w = 500
-    new_h = int(new_w / (w / h))
-    temp_path = "temp_resized.png"
-    img.resize((new_w, new_h)).save(temp_path)
-
+    """Send Image to Official Gemini API and return the diagnostic report string."""
     try:
-        response = medical_agent.run(QUERY, images=[AgnoImage(filepath=temp_path)])
+        # Load and compress image slightly for faster processing
+        img = PILImage.open(image_path)
+        img.thumbnail((800, 800)) 
 
-        # ✅ Correct extraction — use get_content_as_string()
-        if hasattr(response, 'get_content_as_string'):
-            result = response.get_content_as_string()
-        elif hasattr(response, 'content') and response.content:
-            result = response.content if isinstance(response.content, str) else str(response.content)
-        else:
-            result = str(response)
+        # Initialize the official model
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Call API
+        response = model.generate_content([QUERY, img])
 
-        if not result or result.strip() in ("", "None"):
+        if not response.text:
             return "⚠️ No analysis result returned. Please try uploading the image again."
 
-        return result
+        return response.text
 
     except Exception as e:
         return f"⚠️ Analysis error: {str(e)}"
-
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-
 
 # ══════════════════════════════════════════════════════════════
 #  PAGE CONFIG & CSS
@@ -690,6 +660,7 @@ with col_right:
             with open(tmp_img, "wb") as fh:
                 fh.write(uploaded_file.getbuffer())
 
+            # Call the updated function
             report = analyze_medical_image(tmp_img)
 
             try:
@@ -697,7 +668,7 @@ with col_right:
             except Exception:
                 pass
 
-        if report and len(report.strip()) > 20:
+        if report and "Analysis error" not in report:
             st.markdown("""
             <div class="report-outer">
                 <div class="report-top">
@@ -727,7 +698,7 @@ with col_right:
                     except Exception:
                         pass
         else:
-            st.error("⚠️  Analysis could not be completed. Please try uploading the image again.")
+            st.error(report)
 
     elif not uploaded_file:
         # Empty state info cards

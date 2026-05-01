@@ -173,8 +173,23 @@ def analyze_medical_image(image_path: str) -> str:
         img = PILImage.open(image_path)
         img.thumbnail((800, 800)) 
 
-        # ✅ FIX: Changed to the most stable and free model name
-        model = genai.GenerativeModel('gemini-1.5-flash-8b')
+        # ✅ FIX: Auto-detect the best available model for your API Key
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        # Priority list of models to try
+        target_models = ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-pro-vision']
+        
+        selected_model = None
+        for tm in target_models:
+            if tm in available_models:
+                selected_model = tm
+                break
+                
+        # If none of our preferred models are found, just use the first available one that supports vision
+        if not selected_model:
+            selected_model = available_models[0] # Fallback
+            
+        model = genai.GenerativeModel(selected_model)
         
         # Call API
         response = model.generate_content([QUERY, img])

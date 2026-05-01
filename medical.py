@@ -11,7 +11,8 @@ import base64
 # ══════════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ══════════════════════════════════════════════════════════════
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAXuZY4qrc0E0nFLaPVGdpy1es5cMdpaEU")
+# ⚠️ WARNING: Never hardcode your API key in production code!
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyDqRwrNm-D79rpNQBBl3j17MnHJEXhSuHI")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 
@@ -26,7 +27,8 @@ _tools = []   # Web search disabled — avoids DuckDuckGo 404 errors
 #  MEDICAL AGENT
 # ══════════════════════════════════════════════════════════════
 medical_agent = Agent(
-    model=Gemini(id="gemini-2.0-flash"),
+    # ✅ FIX: Changed to 1.5-flash which is FREE without adding a card
+    model=Gemini(id="gemini-1.5-flash"), 
     tools=_tools,
     markdown=True,
 )
@@ -211,7 +213,7 @@ def analyze_medical_image(image_path: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════
-#  PAGE CONFIG
+#  PAGE CONFIG & CSS
 # ══════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="MediScan AI — Medical Imaging Analysis",
@@ -220,9 +222,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ══════════════════════════════════════════════════════════════
-#  GLOBAL CSS
-# ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');

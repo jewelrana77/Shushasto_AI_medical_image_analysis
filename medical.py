@@ -173,8 +173,8 @@ def analyze_medical_image(image_path: str) -> str:
         img = PILImage.open(image_path)
         img.thumbnail((800, 800)) 
 
-        # Initialize the official model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # ✅ FIX: Changed to the most stable and free model name
+        model = genai.GenerativeModel('gemini-1.5-flash-8b')
         
         # Call API
         response = model.generate_content([QUERY, img])

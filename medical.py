@@ -11,7 +11,7 @@ import base64
 # ══════════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ══════════════════════════════════════════════════════════════
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAgmz2VG1jioEh2UBjV5SQd9-R-jsshxoE")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAbhxU9pe8QCAlEvZh9iyLPVSx62RquWIU")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 if not GOOGLE_API_KEY or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":

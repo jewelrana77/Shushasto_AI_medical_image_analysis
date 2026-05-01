@@ -2,7 +2,7 @@ streamlit>=1.36.0
 Pillow>=10.3.0
 agno==1.8.4
 ddgs>=1.1.7
-google-genai>=0.2.0
+google-genai>=1.0.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 gTTS>=2.5.0

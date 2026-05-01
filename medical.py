@@ -11,11 +11,9 @@ import base64
 # ══════════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ══════════════════════════════════════════════════════════════
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAbhxU9pe8QCAlEvZh9iyLPVSx62RquWIU")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyAXuZY4qrc0E0nFLaPVGdpy1es5cMdpaEU")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
-if not GOOGLE_API_KEY or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
-    raise ValueError("Please set your Google API Key in the GOOGLE_API_KEY environment variable.")
 
 # ══════════════════════════════════════════════════════════════
 #  SAFE TOOL IMPORT
@@ -28,7 +26,7 @@ _tools = []   # Web search disabled — avoids DuckDuckGo 404 errors
 #  MEDICAL AGENT
 # ══════════════════════════════════════════════════════════════
 medical_agent = Agent(
-    model=Gemini(id="gemini-2.0-flash-exp"),
+    model=Gemini(id="gemini-2.0-flash"),
     tools=_tools,
     markdown=True,
 )

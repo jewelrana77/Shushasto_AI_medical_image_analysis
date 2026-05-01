@@ -18,13 +18,11 @@ if not GOOGLE_API_KEY or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
     raise ValueError("Please set your Google API Key in the GOOGLE_API_KEY environment variable.")
 
 # ══════════════════════════════════════════════════════════════
-#  SAFE TOOL IMPORT  (ddgs is optional)
+#  SAFE TOOL IMPORT
+#  DuckDuckGo's endpoint changes frequently and returns 404.
+#  We disable it gracefully so the agent always runs.
 # ══════════════════════════════════════════════════════════════
-try:
-    from agno.tools.duckduckgo import DuckDuckGoTools
-    _tools = [DuckDuckGoTools()]
-except ImportError:
-    _tools = []
+_tools = []   # Web search disabled — avoids DuckDuckGo 404 errors
 
 # ══════════════════════════════════════════════════════════════
 #  MEDICAL AGENT
@@ -124,10 +122,10 @@ Red-Flag Symptoms:
 
 ## 6. Evidence-Based References
 
-Search DuckDuckGo for:
-- Current clinical guidelines for this condition
-- Evidence-based treatment protocols
-- 2–3 peer-reviewed references from reputable medical sources (PubMed, WHO, NICE, UpToDate)
+Based on your medical knowledge, provide:
+- Relevant clinical guidelines for this condition (e.g., WHO, NICE, AHA, ACR)
+- Standard evidence-based treatment protocols
+- 2–3 key references from reputable sources (PubMed, UpToDate, Radiopaedia)
 
 ---
 
